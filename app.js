@@ -5,6 +5,7 @@ const app = express();
 
 const authRoutes = require("./routes/auth");
 const eventRoutes = require("./routes/event");
+const redisClient = require('./databases/redis')
 
 app.use(bodyParser.json()); // application/json
 
@@ -26,5 +27,6 @@ app.use((error, req, res, next) => {
   const data = error.data;
   res.status(status).json({ message: message, data: data });
 });
+
 
 app.listen(6060);

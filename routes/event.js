@@ -6,51 +6,50 @@ const router = express.Router();
 
 const eventController = require("../controllers/event");
 
+//get all event
 router.get("/events", isAuth, eventController.getEvents);
 
-router.get("/events", isAuth, eventController.searchEvents);
-
+//Add event
 router.post(
-  "/addEvent",
+  "/events",
   isAuth,
   [
-    body("date").isDate().withMessage("Please enter a valid date"),
     body("title").trim().isLength({ min: 1, max: 50 }),
-    // body('creatorId').custom()
   ],
   eventController.addEvent
 );
 
-router.get("/getEvent/:eventId", isAuth, eventController.getSinglePost);
+//get a event
+router.get("/events/:eventId", isAuth, eventController.getSinglePost);
 
+//update event
 router.put(
-  "/updateEvent/:eventId",
+  "/events/:eventId",
   isAuth,
   [
-    body("date").isDate().withMessage("Please enter a valid date"),
     body("title").trim().isLength({ min: 1, max: 50 }),
   ],
   eventController.updateEvent
 );
 
-router.post("/likeEvent/:eventId", isAuth, [], eventController.likeEvent);
+router.post("/events/:eventId/likes", isAuth, [], eventController.likeEvent);
 
 router.post(
-  "/participateEvent/:eventId",
+  "/events/:eventId/participates",
   isAuth,
   [],
   eventController.participateEvent
 );
 
 router.post(
-  "/addComment/:eventId",
+  "/events/:eventId/comments",
   isAuth,
   [body("comment").trim().isLength({ min: 1, max: 255 })],
   eventController.addComment
 );
 
 router.put(
-  "/updateComment/:eventId",
+  "/events/:eventId/comments",
   isAuth,
   [
     body("comment")

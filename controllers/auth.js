@@ -1,7 +1,9 @@
+require("dotenv").config();
 const { validationResult } = require("express-validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const db = require("../utils/database");
+const redisClient = require('../databases/redis')
 
 exports.signup = (req, res, next) => {
   // console.log(req.body);
@@ -63,7 +65,7 @@ exports.login = (req, res, next) => {
       // console.log(loadedUser);
       return bcrypt.compare(password, body[0].password);
     })
-    .then((isEqual) => {
+    .then(async (isEqual) => {
       if (!isEqual) {
         const error = new Error("Wrong password!");
         error.statusCode = 401;
@@ -75,15 +77,71 @@ exports.login = (req, res, next) => {
           userId: loadedUser.userId,
           isAdmin: loadedUser.isAdmin,
         },
-        "khanh",
+        process.env.ACCESS_TOKEN_SECRET,
         { expiresIn: "1h" }
       );
+
+      const refreshToken = jwt.sign(
+        {
+          email: loadedUser.email,
+          userId: loadedUser.userId,
+          isAdmin: loadedUser.isAdmin,
+        },
+        process.env.REFRESH_TOKEN_SECRET,
+        {
+          expiresIn: "30d",
+        }
+      );
+
+      await redisClient.set(loadedUser.email, refreshToken, {
+        EX: 365 * 24 * 60 * 60,
+      });
+
       res.status(200).json({
-        token: token,
+        accessToken: token,
+        refreshToken: refreshToken,
         userId: loadedUser.userId,
       });
     })
     .catch((err) => {
       next(err);
     });
+};
+
+exports.refreshTokenController = (req, res, next) => {
+  const refreshToken = req.body.token;
+
+  const user = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+
+  const token = jwt.sign(
+    {
+      email: user.email,
+      userId: user.userId,
+      isAdmin: user.isAdmin,
+    },
+    process.env.ACCESS_TOKEN_SECRET,
+    { expiresIn: "1h" }
+  );
+
+  const newRefreshToken = jwt.sign(
+    {
+      email: user.email,
+      userId: user.userId,
+      isAdmin: user.isAdmin,
+    },
+    process.env.REFRESH_TOKEN_SECRET,
+    {
+      expiresIn: "30d",
+    }
+  );
+
+  res.status(200).json({
+    accessToken: token,
+    refreshToken: newRefreshToken,
+    userId: user.userId,
+  });
+
+  console.log(user);
+
+  // res.status(200).json({ a: "a" });
 };

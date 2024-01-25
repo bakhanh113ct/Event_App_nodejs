@@ -16,11 +16,9 @@ exports.getEvents = (req, res, next) => {
       : "SELECT * FROM EVENT, CATEGORYCONTAINED WHERE EVENT.eventId = CATEGORYCONTAINED.eventId AND CATEGORYCONTAINED.title like ?",
     search == ""
       ? [perPage, currentPage * perPage]
-      : ["%" + search + "%", perPage, currentPage * perPage]
-      
+      : ["%" + search + "%", perPage, currentPage * perPage] 
   )
     .then(([data, meta]) => {
-      // console.log(data);
       return res.status(200).json(data);
     })
     .catch((err) => {
@@ -110,11 +108,13 @@ exports.addEvent = async (req, res, next) => {
       error.data = errors.array();
       throw error;
     }
+    const date1 = new Date();
+    console.log(date1);
     const creatorId = req.body.creatorId;
     const title = req.body.title;
     const description = req.body.description;
     const image = req.body.image;
-    const date = req.body.date;
+    const date = new Date(req.body.date);
     const location = req.body.location;
     const categories = req.body.categories;
 
@@ -320,10 +320,10 @@ exports.participateEvent = (req, res, next) => {
           userId,
         ])
           .then((result) => {
-            return res.json({ msg: "InPARTICIPATE" });
+            return res.json({ msg: "UNPARTICIPATE" });
           })
           .catch((err) => {
-            const error = new Error("InPARTICIPATE Failed.");
+            const error = new Error("UNPARTICIPATE Failed.");
             error.statusCode = 422;
             throw err;
           });
@@ -351,7 +351,7 @@ exports.addComment = (req, res, next) => {
     throw error;
   }
 
-  const userId = req.body.userId;
+  const userId = req.userId;
   const comment = req.body.comment;
   var now = new Date();
   now = date.format(now, "YYYY-MM-DD HH:mm:ss", true);
@@ -412,14 +412,12 @@ exports.updateComment = (req, res, next) => {
     });
 };
 
-exports.searchEvents = (req, res, next) => {
-  const searchKey = req.query;
+// exports.searchEvents = (req, res, next) => {
+//   const searchKey = req.query;
 
-  for (key in searchKey) {
-    console.log(searchKey[key]);
-  }
+//   for (key in searchKey) {
+//     console.log(searchKey[key]);
+//   }
 
-  // console.log(searchKey['city']);
-
-  res.json("255");
-};
+//   res.json("255");
+// };
